@@ -17,14 +17,8 @@ struct NavigationViewIfNeeded<Content:View>: View {
     
     @ViewBuilder var body: some View {
         if addNavigationView {
-            if #available(iOS 16.0, *) {
-                NavigationStackTransformable(segueOption: segueOption, screens: $screens) {
-                    content
-                }
-            } else {
-                NavigationView {
-                    content
-                }
+            NavigationStackTransformable(segueOption: segueOption, screens: $screens) {
+                content
             }
         } else {
             content
@@ -32,7 +26,6 @@ struct NavigationViewIfNeeded<Content:View>: View {
     }
 }
 
-@available(iOS 16, *)
 struct NavigationStackTransformable<Content:View>: View {
     
     // Convert [AnyDestination] to NavigationPath

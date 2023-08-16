@@ -45,8 +45,7 @@ public enum PresentationDetentTransformable: Hashable {
     case height(CGFloat)
     case fraction(CGFloat)
     case unknown
-    
-    @available(iOS 16.0, *)
+
     init(detent: PresentationDetent) {
         // FIXME: Unable to convert .height(CGFloat) and .fraction(CGFloat) back from PresentationDetent to PresentationDetentTransformable
         switch detent {
@@ -59,7 +58,6 @@ public enum PresentationDetentTransformable: Hashable {
         }
     }
     
-    @available(iOS 16.0, *)
     var asPresentationDetent: PresentationDetent {
         switch self {
         case .medium:

@@ -31,20 +31,17 @@ public struct AnyRouter: Router {
     }
 
     /// Dismiss all NavigationLinks in NavigationStack heirarchy.
-    @available(iOS 16, *)
     public func pushScreens(destinations: [(AnyRouter) -> any View]) {
         object.pushScreens(destinations: destinations)
     }
     
-    @available(iOS 16, *)
     public func showResizableSheet<V>(sheetDetents: Set<PresentationDetentTransformable>, selection: Binding<PresentationDetentTransformable>?, showDragIndicator: Bool, destination: @escaping (AnyRouter) -> V) where V : View {
         object.showResizableSheet(sheetDetents: sheetDetents, selection: selection, showDragIndicator: showDragIndicator, destination: destination)
     }
-        
+    
     /// Dismiss all NavigationLinks in NavigationStack heirarchy.
     ///
     ///  WARNING: Does not dismiss Sheet or FullScreenCover.
-    @available(iOS 16, *)
     public func popToRoot() {
         object.popToRoot()
     }
@@ -76,12 +73,11 @@ public struct AnyRouter: Router {
         animation: Animation = .default,
         alignment: Alignment = .center,
         backgroundColor: Color? = Color.black.opacity(0.001),
-        backgroundEffect: BackgroundEffect? = nil,
         useDeviceBounds: Bool = true,
         @ViewBuilder destination: @escaping () -> T) where T : View {
-        object.showModal(transition: transition, animation: animation, alignment: alignment, backgroundColor: backgroundColor, backgroundEffect: backgroundEffect, useDeviceBounds: useDeviceBounds, destination: destination)
+        object.showModal(transition: transition, animation: animation, alignment: alignment, backgroundColor: backgroundColor, useDeviceBounds: useDeviceBounds, destination: destination)
     }
-    
+
     /// Convenience method for a simple modal appearing over the current Environment in the center of the screen.
     public func showBasicModal<T>(@ViewBuilder destination: @escaping () -> T) where T : View {
         showModal(

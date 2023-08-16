@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct SheetViewModifier: ViewModifier {
-    
+
     let option: SegueOption
     let screens: Binding<[AnyDestination]>
     let sheetDetents: Set<PresentationDetentTransformable>
@@ -39,19 +39,32 @@ extension View {
         sheetSelection: Binding<PresentationDetentTransformable>,
         sheetSelectionEnabled: Bool,
         showDragIndicator: Bool) -> some View {
-            if #available(iOS 16, *) {
-                if sheetSelectionEnabled {
-                    self
-                        .presentationDetents(sheetDetents.setMap({ $0.asPresentationDetent }), selection: Binding(selection: sheetSelection))
-                        .presentationDragIndicator(showDragIndicator ? .visible : .hidden)
-                } else {
-                    self
-                        .presentationDetents(sheetDetents.setMap({ $0.asPresentationDetent }))
-                        .presentationDragIndicator(showDragIndicator ? .visible : .hidden)
-                }
+            if sheetSelectionEnabled {
+                self
+                    .presentationDetents(sheetDetents.setMap({ $0.asPresentationDetent }), selection: Binding(selection: sheetSelection))
+                    .presentationDragIndicator(showDragIndicator ? .visible : .hidden)
             } else {
                 self
+                    .presentationDetents(sheetDetents.setMap({ $0.asPresentationDetent }))
+                    .presentationDragIndicator(showDragIndicator ? .visible : .hidden)
             }
     }
 }
 
+extension View {
+    func sheet(option: SegueOption,
+               screens: Binding<[AnyDestination]>,
+               sheetDetents: Set<PresentationDetentTransformable>,
+               sheetSelection: Binding<PresentationDetentTransformable>,
+               sheetSelectionEnabled: Bool,
+               showDragIndicator: Bool) -> some View {
+        modifier(SheetViewModifier(
+            option: option,
+            screens: screens,
+            sheetDetents: sheetDetents,
+            sheetSelection: sheetSelection,
+            sheetSelectionEnabled: sheetSelectionEnabled,
+            showDragIndicator: showDragIndicator
+        ))
+    }
+}

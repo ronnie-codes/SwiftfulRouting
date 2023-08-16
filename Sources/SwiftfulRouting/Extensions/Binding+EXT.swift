@@ -53,7 +53,6 @@ extension Binding where Value == Array<AnyDestination> {
     
 }
 
-@available(iOS 16, *)
 extension Binding where Value == PresentationDetent {
     
     init(selection: Binding<PresentationDetentTransformable>) {

@@ -9,25 +9,24 @@ import Foundation
 import SwiftUI
 
 struct AlertViewModifier: ViewModifier {
-    
+
     let option: AlertOption
     let item: Binding<AnyAlert?>
 
     func body(content: Content) -> some View {
-        if #available(iOS 15.0, *) {
-            content
-                .alert(item.wrappedValue?.title ?? "", isPresented: Binding(ifNotNil: Binding(if: option, is: .alert, value: item))) {
-                    item.wrappedValue?.buttons
-                } message: {
-                    if let subtitle = item.wrappedValue?.subtitle {
-                        Text(subtitle)
-                    }
+        content
+            .alert(item.wrappedValue?.title ?? "", isPresented: Binding(ifNotNil: Binding(if: option, is: .alert, value: item))) {
+                item.wrappedValue?.buttons
+            } message: {
+                if let subtitle = item.wrappedValue?.subtitle {
+                    Text(subtitle)
                 }
-        } else {
-            content
-                .alert(isPresented: Binding(ifNotNil: item)) {
-                    item.wrappedValue?.alert ?? Alert(title: Text("Error"))
-                }
-        }
+            }
+    }
+}
+
+extension View {
+    func alert(option: AlertOption, item: Binding<AnyAlert?>) -> some View {
+        modifier(AlertViewModifier(option: option, item: item))
     }
 }

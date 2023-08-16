@@ -7,33 +7,14 @@
 
 import SwiftUI
 
-extension View {
-    func onFirstAppear(perform action: @escaping () -> Void) -> some View {
-        self.modifier(OnFirstAppearModifier(action: action))
-    }
-}
-
-struct OnFirstAppearModifier: ViewModifier {
-    let action: @MainActor () -> Void
-    @State private var isFirstAppear = true
-    
-    func body(content: Content) -> some View {
-        content
-            .onAppear {
-                if isFirstAppear {
-                    action()
-                    isFirstAppear = false
-                }
-            }
-    }
-}
-
 /// RouterView adds modifiers for segues, alerts, and modals. Use the escaping Router to perform actions. If you are already within a Navigation heirarchy, set addNavigationView = false.
 
 public struct RouterView<T:View>: View, Router {
     
     @Environment(\.presentationMode) var presentationMode
     let addNavigationView: Bool
+
+    @ViewBuilder
     let content: (AnyRouter) -> T
  
     // Segues
@@ -96,26 +77,17 @@ public struct RouterView<T:View>: View, Router {
             // Using existing Navigation
             // Push continues in the existing Environment and uses the existing Navigation
             
-            
             // iOS 16 uses NavigationStack and can push additional views onto an existing view stack
-            if #available(iOS 16, *) {
-                if screenStack.isEmpty {
-                    // We are in the root Router and should start building on $screens
-                    self.screens.append(AnyDestination(RouterView<V>(addNavigationView: false, screens: $screens, content: destination)))
-                } else {
-                    // We are not in the root Router and should continue off of $screenStack
-                    self.screenStack.append(AnyDestination(RouterView<V>(addNavigationView: false, screens: $screenStack, content: destination)))
-                }
-                
-            // iOS 14/15 uses NavigationView and can only push 1 view at a time
+            if screenStack.isEmpty {
+                // We are in the root Router and should start building on $screens
+                self.screens.append(AnyDestination(RouterView<V>(addNavigationView: false, screens: $screens, content: destination)))
             } else {
-                // Push a new screen and don't pass view stack to child view (screens == nil)
-                self.screens.append(AnyDestination(RouterView<V>(addNavigationView: false, screens: nil, content: destination)))
+                // We are not in the root Router and should continue off of $screenStack
+                self.screenStack.append(AnyDestination(RouterView<V>(addNavigationView: false, screens: $screenStack, content: destination)))
             }
         }
     }
     
-    @available(iOS 16, *)
     public func pushScreens(destinations: [(AnyRouter) -> any View]) {
         // iOS 16 supports NavigationStack, which can push a stack of views and increment an existing view stack
         self.segueOption = .push
@@ -141,7 +113,6 @@ public struct RouterView<T:View>: View, Router {
         }
     }
     
-    @available(iOS 16, *)
     public func showResizableSheet<V:View>(sheetDetents: Set<PresentationDetentTransformable>, selection: Binding<PresentationDetentTransformable>?, showDragIndicator: Bool = true, @ViewBuilder destination: @escaping (AnyRouter) -> V) {
         self.segueOption = .sheet
         self.sheetDetents = sheetDetents
@@ -162,7 +133,6 @@ public struct RouterView<T:View>: View, Router {
         self.presentationMode.wrappedValue.dismiss()
     }
     
-    @available(iOS 16, *)
     public func popToRoot() {
         self.screens = []
         self.screenStack = []
@@ -199,7 +169,6 @@ public struct RouterView<T:View>: View, Router {
         animation: Animation,
         alignment: Alignment,
         backgroundColor: Color?,
-        backgroundEffect: BackgroundEffect?,
         useDeviceBounds: Bool,
         @ViewBuilder destination: @escaping () -> T) {
             guard self.modal == nil else {
@@ -207,7 +176,7 @@ public struct RouterView<T:View>: View, Router {
                 return
             }
             
-            self.modalConfiguration = ModalConfiguration(transition: transition, animation: animation, alignment: alignment, backgroundColor: backgroundColor, backgroundEffect: backgroundEffect, useDeviceBounds: useDeviceBounds)
+            self.modalConfiguration = ModalConfiguration(transition: transition, animation: animation, alignment: alignment, backgroundColor: backgroundColor, useDeviceBounds: useDeviceBounds)
             self.modal = AnyDestination(destination())
         }
     
@@ -217,20 +186,27 @@ public struct RouterView<T:View>: View, Router {
 }
 
 struct RouterView_Previews: PreviewProvider {
+    static var testView: some View {
+        VStack {
+            Text("Row 1")
+            Text("Row 2")
+            Text("Row 3")
+        }
+    }
+
     static var previews: some View {
         RouterView { router in
-            Text("Hi")
-                .onTapGesture {
-                    router.showScreen(.push) { router in
-                        Text("Hello, world")
-                    }
+            Button("Hi") {
+                router.showBasicModal {
+                   testView
                 }
+            }
         }
     }
 }
 
 extension View {
-    
+
     @ViewBuilder func showingScreen(
         option: SegueOption,
         screens: Binding<[AnyDestination]>,
@@ -239,59 +215,34 @@ extension View {
         sheetSelection: Binding<PresentationDetentTransformable>,
         sheetSelectionEnabled: Bool,
         showDragIndicator: Bool) -> some View {
-            if #available(iOS 14, *) {
-                self
-                    .modifier(NavigationLinkViewModifier(
-                        option: option,
-                        screens: screens,
-                        shouldAddNavigationDestination: screenStack.isEmpty
-                    ))
-                    .modifier(SheetViewModifier(
-                        option: option,
-                        screens: screens,
-                        sheetDetents: sheetDetents,
-                        sheetSelection: sheetSelection,
-                        sheetSelectionEnabled: sheetSelectionEnabled,
-                        showDragIndicator: showDragIndicator
-                    ))
-                    .modifier(FullScreenCoverViewModifier(
-                        option: option,
-                        screens: screens
-                    ))
-            } else {
-                self
-                    .modifier(NavigationLinkViewModifier(
-                        option: option,
-                        screens: screens,
-                        shouldAddNavigationDestination: screenStack.isEmpty
-                    ))
-                    .modifier(SheetViewModifier(
-                        option: option,
-                        screens: screens,
-                        sheetDetents: sheetDetents,
-                        sheetSelection: sheetSelection,
-                        sheetSelectionEnabled: sheetSelectionEnabled,
-                        showDragIndicator: showDragIndicator
-                    ))
-            }
+            self
+                .navigationLink(
+                    option: option,
+                    screens: screens,
+                    shouldAddNavigationDestination: screenStack.isEmpty
+                )
+                .sheet(
+                    option: option,
+                    screens: screens,
+                    sheetDetents: sheetDetents,
+                    sheetSelection: sheetSelection,
+                    sheetSelectionEnabled: sheetSelectionEnabled,
+                    showDragIndicator: showDragIndicator
+                )
+                .fullScreenCover(option: option, screens: screens)
     }
 
     @ViewBuilder func showingAlert(option: AlertOption, item: Binding<AnyAlert?>) -> some View {
         self
-            .modifier(ConfirmationDialogViewModifier(option: option, item: item))
-            .modifier(AlertViewModifier(option: option, item: item))
+            .confirmationDialog(option: option, item: item)
+            .alert(option: option, item: item)
     }
-    
+
     func showingModal(configuration: ModalConfiguration, item: Binding<AnyDestination?>) -> some View {
-        modifier(ModalViewModifier(configuration: configuration, item: item))
+        modal(configuration: configuration, item: item)
     }
-    
+
     @ViewBuilder func onChangeIfiOS15<E:Equatable>(of value: E, perform: @escaping (E) -> Void) -> some View {
-        if #available(iOS 15, *) {
-            self
-                .onChange(of: value, perform: perform)
-        } else {
-            self
-        }
+        onChange(of: value, perform: perform)
     }
 }

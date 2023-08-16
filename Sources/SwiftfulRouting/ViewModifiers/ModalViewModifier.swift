@@ -29,24 +29,12 @@ struct ModalViewModifier: ViewModifier {
                                 }
                                 .zIndex(1)
                         }
-                        
-                        if let backgroundEffect = configuration.backgroundEffect {
-                            VisualEffectViewRepresentable(effect: backgroundEffect.effect)
-                                .opacity(backgroundEffect.opacity)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .edgesIgnoringSafeArea(.all)
-                                .transition(AnyTransition.opacity.animation(configuration.animation))
-                                .onTapGesture {
-                                    item.wrappedValue = nil
-                                }
-                                .zIndex(2)
-                        }
 
                         view
                             .frame(configuration: configuration)
                             .edgesIgnoringSafeArea(configuration.useDeviceBounds ? .all : [])
                             .transition(configuration.transition)
-                            .zIndex(3)
+                            .zIndex(2)
                     }
                 }
                 .zIndex(999)
@@ -56,15 +44,21 @@ struct ModalViewModifier: ViewModifier {
 }
 
 extension View {
-    
     @ViewBuilder func frame(configuration: ModalConfiguration) -> some View {
         if configuration.useDeviceBounds {
+            #if os(macOS)
+            frame(width: NSScreen.main!.frame.width, height: NSScreen.main!.frame.height, alignment: configuration.alignment)
+            #else
             frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height, alignment: configuration.alignment)
+            #endif
         } else {
             frame(maxWidth: .infinity, maxHeight: .infinity, alignment: configuration.alignment)
         }
     }
-    
 }
 
-
+extension View {
+    func modal(configuration: ModalConfiguration, item: Binding<AnyDestination?>) -> some View {
+        modifier(ModalViewModifier(configuration: configuration, item: item))
+    }
+}
